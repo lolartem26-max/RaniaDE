@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+*.token
+*.password
+*.secret
+*.key
+config/
+.local/
+wallpaper.*
