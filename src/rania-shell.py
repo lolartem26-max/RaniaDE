@@ -14,6 +14,7 @@ from PyQt5.QtGui import QColor, QFont, QPainter, QPixmap, QIcon
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QFrame, QLabel, QPushButton, QToolButton,
     QHBoxLayout, QVBoxLayout, QGridLayout, QMenu, QDialog, QLineEdit,
+    QCheckBox, QSplashScreen,
     QListWidget, QListWidgetItem, QTabWidget, QFileDialog, QMessageBox,
     QProgressBar, QScrollArea, QSizePolicy,
 )
@@ -31,6 +32,9 @@ APP_DIRS = [
 ]
 ACCENT = "#d0bcff"
 LANGUAGE_FILE = HOME / ".config/rania/language"
+FIRST_RUN_FILE = HOME / ".config/rania/first-run-0.1.5"
+VERSION = "0.1.5"
+KDE_APP_PACKAGES = ("dolphin", "konsole", "kate", "gwenview", "okular", "ark", "kcalc", "systemsettings")
 
 
 def load_language():
@@ -149,6 +153,27 @@ TRANSLATIONS = {
     "О RaniaDE": "About RaniaDE",
     "RaniaDE — лёгкая рабочая среда на Openbox + Python/Qt.\nПрежние обои сохранены.\nМеню приложений читает desktop-файлы установленных программ.\nRania App Market соединяет доступные источники пакетов.": "RaniaDE is a lightweight desktop environment built with Openbox + Python/Qt.\nYour existing wallpaper is preserved.\nThe app menu reads desktop files for installed programs.\nRania App Market connects available package sources.",
     "Пуск · все приложения": "Start · all applications",
+    "Пуск": "Start",
+    "Первоначальная настройка RaniaDE": "RaniaDE first-run setup",
+    "RaniaDE 0.1.5 готовит рабочий стол. Выберите, какие KDE-компоненты установить. Установка запускается только после отдельного подтверждения, в видимом терминале; пароль администратора в оболочке не вводится.": "RaniaDE 0.1.5 is preparing your desktop. Choose which KDE components to install. Installation starts only after a separate confirmation, in a visible terminal; no administrator password is entered in the shell.",
+    "KWin — оконный менеджер KDE (kwin-x11)": "KWin — KDE window manager (kwin-x11)",
+    "Набор KDE-приложений: Dolphin, Konsole, Kate, Gwenview, Okular, Ark, KCalc, System Settings": "KDE applications: Dolphin, Konsole, Kate, Gwenview, Okular, Ark, KCalc, System Settings",
+    "Полная оболочка Plasma не устанавливается и не запускается поверх RaniaDE.": "The full Plasma shell is not installed or launched on top of RaniaDE.",
+    "Пропустить сейчас": "Skip for now",
+    "Пакеты для установки:": "Packages to install:",
+    "Будет открыт терминал для sudo apt-get. Продолжить с этим точным списком?": "A terminal will open for sudo apt-get. Continue with this exact package list?",
+    "Установка системных пакетов": "System package installation",
+    "Не найдена команда apt-get. Автоматическая установка не поддерживается этой системой.": "The apt-get command was not found. Automatic installation is not supported on this system.",
+    "Не найден терминал. Установите пакеты вручную из README.": "No terminal was found. Install packages manually as described in README.",
+    "Перезапустить RaniaDE": "Restart RaniaDE",
+    "Перезапустить оболочку RaniaDE? Открытые приложения и оконный менеджер останутся работать.": "Restart the RaniaDE shell? Open applications and the window manager will keep running.",
+    "Использовать KWin сейчас…": "Use KWin now…",
+    "KWin не установлен. Установите его через первоначальную настройку или системный пакетный менеджер.": "KWin is not installed. Install it through first-run setup or your system package manager.",
+    "KWin заменит оконный менеджер только в текущем X11-сеансе. Для возврата к Openbox выполните openbox --replace. Полная оболочка Plasma запускаться не будет. Продолжить?": "KWin will replace the window manager only in the current X11 session. To return to Openbox, run openbox --replace. The full Plasma shell will not start. Continue?",
+    "KWin можно запустить только в активном X11-сеансе с DISPLAY.": "KWin can only be started in an active X11 session with DISPLAY set.",
+    "Сначала выберите хотя бы один компонент.": "Select at least one component first.",
+    "Экран запуска RaniaDE": "Starting RaniaDE",
+    "RaniaDE 0.1.5 — независимая оболочка рабочего стола на Python/Qt. Она сохраняет выбранные обои и собственные панели, а окнами может управлять KWin или Openbox. Приложения KDE устанавливаются отдельно. RaniaDE не является KDE Plasma и не запускает plasmashell.": "RaniaDE 0.1.5 is an independent Python/Qt desktop shell. It keeps your chosen wallpaper and its own panels, while windows can be managed by KWin or Openbox. KDE applications are installed separately. RaniaDE is not KDE Plasma and does not launch plasmashell.",
 }
 
 DYNAMIC_TRANSLATIONS = [
@@ -746,7 +771,7 @@ class Desktop(QWidget):
 
     def paintEvent(self, event):
         p = QPainter(self)
-        p.fillRect(self.rect(), QColor("#171322"))
+        p.fillRect(self.rect(), QColor("#080808"))
         pix = QPixmap(str(WALLPAPER)) if WALLPAPER.exists() else QPixmap()
         if not pix.isNull():
             scaled = pix.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
@@ -754,7 +779,7 @@ class Desktop(QWidget):
             y = max(0, (scaled.height() - self.height()) // 2)
             p.drawPixmap(-x, -y, scaled)
         else:
-            p.fillRect(self.rect(), QColor("#171322"))
+            p.fillRect(self.rect(), QColor("#080808"))
         p.fillRect(self.rect(), QColor(9, 7, 20, 24))
 
 
@@ -767,10 +792,10 @@ class TopBar(QWidget):
         self.power_buttons = []
         self.setAttribute(Qt.WA_TranslucentBackground, False)
         self.setStyleSheet("""
-            QWidget#topbar { background:#211c2ddf; border:1px solid #51465e; border-radius:14px; }
+            QWidget#topbar { background:#080808; border:1px solid #292929; border-radius:14px; }
             QLabel { color:#f3effa; background:transparent; border:0; }
             QToolButton { color:#e6def0; background:transparent; border:0; border-radius:10px; padding:5px 9px; font-size:12px; }
-            QToolButton:hover { background:#514264; color:#fff; }
+            QToolButton:hover { background:#262626; color:#fff; }
             QToolButton#brand { color:#fff; font-weight:700; padding-left:7px; }
             QToolButton#logo { padding:2px 7px; }
         """)
@@ -799,11 +824,6 @@ class TopBar(QWidget):
         self.add_menu_button(row, tr("Рабочий стол"), self.show_desktop_menu)
         self.add_menu_button(row, tr("Избранное"), self.show_favorites)
         self.add_menu_button(row, tr("Справка"), self.show_about)
-        self.language_button = QToolButton()
-        self.language_button.setText(CURRENT_LANGUAGE.upper())
-        self.language_button.setToolTip(tr("Язык"))
-        self.language_button.clicked.connect(self.show_language_menu)
-        row.addWidget(self.language_button)
         row.addStretch(1)
         self.clock = QLabel()
         self.clock.setStyleSheet("font-size:12px; padding-right:8px;")
@@ -815,6 +835,11 @@ class TopBar(QWidget):
             b.setToolTip(tip)
             b.setStyleSheet("QToolButton{background:transparent;border:0;border-radius:8px;padding:4px 5px;}")
             row.addWidget(b)
+        self.language_button = QToolButton()
+        self.language_button.setText(CURRENT_LANGUAGE.upper())
+        self.language_button.setToolTip(tr("Язык"))
+        self.language_button.clicked.connect(self.show_language_menu)
+        row.addWidget(self.language_button)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_clock)
         self.timer.start(1000)
@@ -905,6 +930,9 @@ class TopBar(QWidget):
             return
         menu = QMenu(self)
         menu.setStyleSheet("QMenu{background:#292333;color:#f3effa;border:1px solid #645875;padding:7px;} QMenu::item{padding:9px 26px;border-radius:9px;} QMenu::item:selected{background:#514264;}")
+        shell_restart = menu.addAction(tr("Перезапустить RaniaDE"))
+        shell_restart.triggered.connect(self.confirm_shell_restart)
+        menu.addSeparator()
         restart = menu.addAction(QIcon.fromTheme("system-reboot"), tr("Перезагрузить…"))
         shutdown = menu.addAction(QIcon.fromTheme("system-shutdown"), tr("Выключить…"))
         restart.triggered.connect(lambda: self.confirm_power_action("reboot", tr("перезагрузить компьютер")))
@@ -928,17 +956,37 @@ class TopBar(QWidget):
         except OSError as exc:
             QMessageBox.warning(self, tr("Не удалось выполнить действие"), str(exc))
 
+    def confirm_shell_restart(self):
+        answer = QMessageBox.question(self, tr("Подтверждение"), tr("Перезапустить оболочку RaniaDE? Открытые приложения и оконный менеджер останутся работать."), QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+        if answer == QMessageBox.Yes:
+            QTimer.singleShot(150, lambda: os.execv(sys.executable, [sys.executable, str(Path(__file__).resolve())]))
+
     def open_market(self):
         AppMarketDialog(self).exec_()
 
     def show_desktop_menu(self):
-        self.menu_at([(tr("Обновить рабочий стол"), lambda: QApplication.activeWindow().update(), None), (tr("Открыть терминал"), lambda: launch_first(["konsole", "xterm"]), "utilities-terminal")])
+        self.menu_at([(tr("Обновить рабочий стол"), lambda: QApplication.activeWindow().update(), None), (tr("Открыть терминал"), lambda: launch_first(["konsole", "xterm"]), "utilities-terminal"), (tr("Использовать KWin сейчас…"), self.use_kwin, "preferences-system-windows")])
+
+    def use_kwin(self):
+        path = shutil.which("kwin_x11")
+        if not path:
+            QMessageBox.information(self, tr("Недоступно"), tr("KWin не установлен. Установите его через первоначальную настройку или системный пакетный менеджер."))
+            return
+        if not os.environ.get("DISPLAY") or os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland":
+            QMessageBox.warning(self, tr("Недоступно"), tr("KWin можно запустить только в активном X11-сеансе с DISPLAY."))
+            return
+        answer = QMessageBox.question(self, tr("Подтверждение"), tr("KWin заменит оконный менеджер только в текущем X11-сеансе. Для возврата к Openbox выполните openbox --replace. Полная оболочка Plasma запускаться не будет. Продолжить?"), QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+        if answer == QMessageBox.Yes:
+            try:
+                subprocess.Popen([path, "--replace"], start_new_session=True)
+            except OSError as exc:
+                QMessageBox.warning(self, tr("Не удалось выполнить действие"), str(exc))
 
     def show_favorites(self):
         self.menu_at([(tr("Файлы"), lambda: launch_first(["dolphin", "pcmanfm", "thunar"]), "system-file-manager"), (tr("Терминал"), lambda: launch_first(["konsole", "xterm"]), "utilities-terminal"), ("Chromium", lambda: launch_first(["chromium", "firefox"]), "chromium")])
 
     def show_about(self):
-        QMessageBox.information(self, tr("О RaniaDE"), tr("RaniaDE — лёгкая рабочая среда на Openbox + Python/Qt.\nПрежние обои сохранены.\nМеню приложений читает desktop-файлы установленных программ.\nRania App Market соединяет доступные источники пакетов."))
+        QMessageBox.information(self, tr("О RaniaDE"), tr("RaniaDE 0.1.5 — независимая оболочка рабочего стола на Python/Qt. Она сохраняет выбранные обои и собственные панели, а окнами может управлять KWin или Openbox. Приложения KDE устанавливаются отдельно. RaniaDE не является KDE Plasma и не запускает plasmashell."))
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -952,8 +1000,8 @@ class Dock(QWidget):
         self.setStyleSheet("""
             QWidget#dock { background:transparent; border:0; }
             QToolButton { color:#eee8f4; background:transparent; border:0; border-radius:10px; min-width:50px; min-height:50px; padding:3px; }
-            QToolButton:hover { background:#514264; }
-            QToolButton#launcher { background:#3c314d; }
+            QToolButton:hover { background:#292929; }
+            QToolButton#launcher { background:#202020; color:#fff; border:1px solid #444; min-width:70px; }
             QLabel#divider { color:#71677b; font-size:22px; padding:0 4px; }
         """)
         self.setObjectName("dock")
@@ -961,15 +1009,35 @@ class Dock(QWidget):
         row = QHBoxLayout(self)
         row.setContentsMargins(10, 7, 10, 7)
         row.setSpacing(5)
-        self.add_button(row, str(START_ICON), tr("Пуск · все приложения"), self.open_start, "launcher")
-        self.add_button(row, "system-file-manager", tr("Файлы"), lambda: launch_first(["dolphin", "pcmanfm", "thunar", "nautilus"]))
-        self.add_button(row, "utilities-terminal", tr("Терминал"), lambda: launch_first(["konsole", "xterm"]))
-        self.add_button(row, "chromium", "Chromium", lambda: launch_first(["chromium", "firefox"]))
-        divider = QLabel("│")
-        divider.setObjectName("divider")
-        row.addWidget(divider)
-        self.add_button(row, "applications-other", "Rania App Market", self.open_market)
-        self.add_button(row, "preferences-system", tr("Параметры системы"), lambda: launch_first(["systemsettings"]))
+        left_group = QWidget()
+        left_row = QHBoxLayout(left_group)
+        left_row.setContentsMargins(0, 0, 0, 0)
+        left_row.setSpacing(3)
+        self.add_button(left_row, "system-file-manager", tr("Файлы"), lambda: launch_first(["dolphin", "pcmanfm", "thunar", "nautilus"]))
+        self.add_button(left_row, "utilities-terminal", tr("Терминал"), lambda: launch_first(["konsole", "xterm"]))
+        self.add_button(left_row, "chromium", "Chromium", lambda: launch_first(["chromium", "firefox"]))
+        left_group.setFixedWidth(168)
+        row.addWidget(left_group)
+        row.addStretch(1)
+        self.start_button = QToolButton(self)
+        self.start_button.setObjectName("launcher")
+        self.start_button.setIcon(QIcon(str(START_ICON)))
+        self.start_button.setIconSize(QSize(27, 27))
+        self.start_button.setText(tr("Пуск"))
+        self.start_button.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.start_button.setToolTip(tr("Пуск · все приложения"))
+        self.start_button.clicked.connect(self.open_start)
+        self.start_button.setFixedSize(76, 54)
+        row.addWidget(self.start_button)
+        row.addStretch(1)
+        right_group = QWidget()
+        right_row = QHBoxLayout(right_group)
+        right_row.setContentsMargins(0, 0, 0, 0)
+        right_row.setSpacing(3)
+        self.add_button(right_row, "applications-other", "Rania App Market", self.open_market)
+        self.add_button(right_row, "preferences-system", tr("Параметры системы"), lambda: launch_first(["systemsettings"]))
+        right_group.setFixedWidth(168)
+        row.addWidget(right_group)
         self.place()
 
     def add_button(self, row, icon_name, tooltip, callback, object_name=""):
@@ -985,14 +1053,16 @@ class Dock(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(QColor(178, 164, 196, 190))
-        painter.setBrush(QColor(33, 28, 45, 168))
+        painter.setPen(QColor(42, 42, 42, 255))
+        painter.setBrush(QColor(8, 8, 8, 245))
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -2, -2), 14, 14)
 
     def place(self):
         g = QApplication.primaryScreen().availableGeometry()
         width = min(590, g.width() - 24)
         self.setGeometry(g.x() + (g.width() - width) // 2, g.y() + g.height() - 82, width, 68)
+        self.start_button.move((self.width() - self.start_button.width()) // 2, 7)
+        self.start_button.raise_()
 
     def open_start(self):
         toggle_apps_dialog(self)
@@ -1005,11 +1075,103 @@ class Dock(QWidget):
         self.place()
 
 
+def launch_package_installer(packages, parent):
+    if not shutil.which("apt-get"):
+        QMessageBox.warning(parent, tr("Установка системных пакетов"), tr("Не найдена команда apt-get. Автоматическая установка не поддерживается этой системой."))
+        return False
+    terminal = next((shutil.which(name) for name in ("x-terminal-emulator", "konsole", "gnome-terminal", "xfce4-terminal", "xterm") if shutil.which(name)), None)
+    if not terminal:
+        QMessageBox.warning(parent, tr("Установка системных пакетов"), tr("Не найден терминал. Установите пакеты вручную из README."))
+        return False
+    package_args = " ".join(shlex.quote(package) for package in packages)
+    script = "sudo apt-get update && sudo apt-get install -y -- " + package_args + "; status=$?; echo; if [ $status -eq 0 ]; then echo 'RaniaDE setup completed.'; else echo 'Package installation failed.'; fi; read -r -p 'Press Enter to close this terminal...' _"
+    try:
+        subprocess.Popen([terminal, "-e", "sh", "-lc", script], start_new_session=True)
+        return True
+    except OSError as exc:
+        QMessageBox.warning(parent, tr("Установка системных пакетов"), str(exc))
+        return False
+
+
+class FirstRunSetupDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(tr("Первоначальная настройка RaniaDE"))
+        self.setMinimumWidth(500)
+        self.setStyleSheet("QDialog{background:#101010;color:#f3f3f3;} QLabel{color:#f3f3f3;} QCheckBox{color:#f3f3f3;padding:5px;} QPushButton{background:#242424;color:#fff;border:1px solid #444;border-radius:10px;padding:8px 14px;} QPushButton:hover{background:#333;}")
+        root = QVBoxLayout(self)
+        intro = QLabel(tr("RaniaDE 0.1.5 готовит рабочий стол. Выберите, какие KDE-компоненты установить. Установка запускается только после отдельного подтверждения, в видимом терминале; пароль администратора в оболочке не вводится."))
+        intro.setWordWrap(True)
+        root.addWidget(intro)
+        self.kwin = QCheckBox(tr("KWin — оконный менеджер KDE (kwin-x11)"))
+        self.kwin.setChecked(True)
+        root.addWidget(self.kwin)
+        self.apps = QCheckBox(tr("Набор KDE-приложений: Dolphin, Konsole, Kate, Gwenview, Okular, Ark, KCalc, System Settings"))
+        self.apps.setChecked(True)
+        root.addWidget(self.apps)
+        note = QLabel(tr("Полная оболочка Plasma не устанавливается и не запускается поверх RaniaDE."))
+        note.setWordWrap(True)
+        note.setStyleSheet("color:#aaa;padding:5px 0;")
+        root.addWidget(note)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        install = QPushButton(tr("Установить выбранное"))
+        skip = QPushButton(tr("Пропустить сейчас"))
+        install.clicked.connect(self.install_selected)
+        skip.clicked.connect(self.skip)
+        buttons.addWidget(skip)
+        buttons.addWidget(install)
+        root.addLayout(buttons)
+
+    def install_selected(self):
+        packages = []
+        if self.kwin.isChecked():
+            packages.append("kwin-x11")
+        if self.apps.isChecked():
+            packages.extend(KDE_APP_PACKAGES)
+        if not packages:
+            QMessageBox.information(self, tr("Установка системных пакетов"), tr("Сначала выберите хотя бы один компонент."))
+            return
+        package_list = ", ".join(packages)
+        answer = QMessageBox.question(self, tr("Установка системных пакетов"), tr("Пакеты для установки:") + "\n" + package_list + "\n\n" + tr("Будет открыт терминал для sudo apt-get. Продолжить с этим точным списком?"), QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+        if answer != QMessageBox.Yes:
+            return
+        if launch_package_installer(packages, self):
+            FIRST_RUN_FILE.parent.mkdir(parents=True, exist_ok=True)
+            FIRST_RUN_FILE.write_text("completed\n", encoding="utf-8")
+            self.accept()
+
+    def skip(self):
+        FIRST_RUN_FILE.parent.mkdir(parents=True, exist_ok=True)
+        FIRST_RUN_FILE.write_text("skipped\n", encoding="utf-8")
+        self.accept()
+
+
+def show_first_run_setup(splash, parent):
+    splash.close()
+    if not FIRST_RUN_FILE.exists():
+        FirstRunSetupDialog(parent).exec_()
+
+
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("RaniaDE")
+    app.setApplicationVersion(VERSION)
     app.setFont(QFont("Noto Sans", 10))
     QIcon.setThemeName("breeze")
+    splash_pixmap = QPixmap(480, 180)
+    splash_pixmap.fill(QColor("#080808"))
+    painter = QPainter(splash_pixmap)
+    painter.setPen(QColor("#ffffff"))
+    painter.setFont(QFont("Noto Sans", 24, QFont.Bold))
+    painter.drawText(0, 28, 480, 76, Qt.AlignCenter, "RaniaDE")
+    painter.setFont(QFont("Noto Sans", 10))
+    painter.setPen(QColor("#aaaaaa"))
+    painter.drawText(0, 95, 480, 36, Qt.AlignCenter, tr("Экран запуска RaniaDE"))
+    painter.end()
+    splash = QSplashScreen(splash_pixmap, Qt.WindowStaysOnTopHint)
+    splash.show()
+    app.processEvents()
     desktop = Desktop()
     top = TopBar()
     dock = Dock()
@@ -1018,6 +1180,7 @@ def main():
     dock.show()
     top.raise_()
     dock.raise_()
+    QTimer.singleShot(900, lambda: show_first_run_setup(splash, top))
     sys.exit(app.exec_())
 
 

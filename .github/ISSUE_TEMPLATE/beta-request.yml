@@ -1,0 +1,16 @@
+name: "RaniaDE Beta Test / Бета-тест RaniaDE"
+description: "Request to join the public beta / Запрос на участие в открытом бета-тесте"
+title: "[Beta 0.1.5] RaniaDE test request"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This creates a public GitHub issue. Do not post email addresses, phone numbers, passwords, or other sensitive information.
+        Эта форма создаёт публичное обращение GitHub. Не указывайте email, телефон, пароли и другие чувствительные данные.
+  - type: checkboxes
+    id: beta_acknowledgement
+    attributes:
+      label: "Confirmation / Подтверждение"
+      options:
+        - label: "I understand RaniaDE 0.1.5 is beta software and may contain defects. / Я понимаю, что RaniaDE 0.1.5 — бета-версия и в ней могут быть ошибки."
+          required: true
